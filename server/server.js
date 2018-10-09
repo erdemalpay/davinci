@@ -14,7 +14,7 @@ jwtOptions.secretOrKey = 'movieratingapplicationsecretkey'; */
 
 const gameRoute = require('./controllers/games');
 const tableRoute = require('./controllers/tables');
-// const userRoute = require('./controllers/users');
+const userRoute = require('./controllers/users');
 
 const app = express();
 const Sentry = require('@sentry/node');
@@ -35,6 +35,11 @@ mongoose.connect('mongodb://localhost/davinci', () => {
   process.exit(1);
 });
 
+require('./models/Game');
+require('./models/User');
+require('./models/GamePlay');
+require('./models/Table');
+
 // The request handler must be the first middleware on the app
 app.use(Sentry.Handlers.requestHandler());
 
@@ -44,7 +49,7 @@ app.get('/error', () => {
 
 gameRoute.controller(app);
 tableRoute.controller(app);
-// userRoute.controller(app);
+userRoute.controller(app);
 
 router.get('/', (req, res) => {
   res.json({ message: 'API Initialized!' });

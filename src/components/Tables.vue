@@ -44,7 +44,7 @@
     <v-layout row wrap>
       <v-flex xs4 v-for="(table, tableIndex) in tables" :key="table._id">
         <v-list two-line>
-            Table No:{{ tableIndex }}
+            Table No:{{ tableIndex + 1 }}
             <v-btn flat @click="addGamePlay = true" width="100%">Add Gameplay</v-btn>
             <v-dialog v-model="addGamePlay" width="290px">
               <v-card>
@@ -65,8 +65,17 @@
                     v-model="game"
                     :items="games"
                     item-text="title"
+                    item-value="_id"
                     label="Games"
                   ></v-autocomplete>
+                  <v-select
+                    v-model="responsible"
+                    :items="users"
+                    item-text="name"
+                    item-value="_id"
+                    label="Responsible"
+                    required
+                  ></v-select>
                 </v-flex>
               </v-layout>
             </v-container>
@@ -81,7 +90,7 @@
 
                   <v-btn
                     flat="flat"
-                    @click="addGamePlay = false; addNewGamePlay()"
+                    @click="addGamePlay = false; addNewGamePlay(table._id)"
                   >
                     Create
                   </v-btn>
@@ -91,14 +100,11 @@
             <template v-for="(gamePlay, index) in table.gamePlays">
               <v-list-tile :key="index" avatar ripple>
                 <v-list-tile-content>
-                  <v-list-tile-title>{{ gamePlay.game.title }}</v-list-tile-title>
-                  <v-list-tile-sub-title class="text--primary">{{ gamePlay.playerCount }}
-                  </v-list-tile-sub-title>
+                  <v-list-tile-title>Game: {{ gamePlay.game.title }}</v-list-tile-title>
+                  <v-list-tile-title>Player Count: {{ gamePlay.playerCount }}</v-list-tile-title>
+                  <v-list-tile-title>Responsible: {{ gamePlay.responsible.name }}
+                  </v-list-tile-title>
                 </v-list-tile-content>
-                <v-list-tile-action>
-                  <v-list-tile-action-text>{{ item.action }}</v-list-tile-action-text>
-                  <v-icon color="grey lighten-1">star_border</v-icon>
-                </v-list-tile-action>
               </v-list-tile>
               <v-divider v-if="index + 1 < table.gamePlays.length"
                 :key="`divider-${index}`"></v-divider>
@@ -124,13 +130,16 @@ export default {
       addGamePlay: false,
       tables: [],
       games: [],
+      users: [],
       playerCount: 0,
       game: null,
+      responsible: null,
     };
   },
   mounted() {
     this.fetchTables();
     this.fetchGames();
+    this.fetchUsers();
   },
   methods: {
     async fetchTables() {
@@ -140,7 +149,7 @@ export default {
       })
         .then((response) => {
           console.log(response.data);
-          this.tables = response.data;
+          this.tables = response.data.tables;
         })
         .catch(() => {});
     },
@@ -152,6 +161,16 @@ export default {
         .then((response) => {
           console.log('Games:', response.data);
           this.games = response.data.games;
+        })
+        .catch(() => {});
+    },
+    async fetchUsers() {
+      return axios({
+        method: 'get',
+        url: 'http://localhost:8081/users',
+      })
+        .then((response) => {
+          this.users = response.data.users;
         })
         .catch(() => {});
     },
@@ -168,13 +187,17 @@ export default {
         })
         .catch(() => {});
     },
-    async addNewGamePlay() {
+    async addNewGamePlay(tableId) {
+      console.log(this.responsible);
+      console.log(this.game);
       return axios({
         method: 'post',
         data: {
-          date: new Date(),
+          playerCount: this.playerCount,
+          gameId: this.game,
+          userId: this.responsible,
         },
-        url: 'http://localhost:8081/tables',
+        url: `http://localhost:8081/table/${tableId}/gameplay`,
       })
         .then(() => {
           this.fetchTables();

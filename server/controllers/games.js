@@ -1,4 +1,4 @@
-const Game = require('../models/Game.js');
+const Game = require('../models/Game');
 
 module.exports.controller = (app) => {
   app.get('/games', (req, res) => {

@@ -1,14 +1,30 @@
 const moment = require('moment');
+const Game = require('../models/Game');
+const User = require('../models/User');
+const GamePlay = require('../models/GamePlay');
+const Table = require('../models/Table');
 
-const Table = require('../models/Table.js');
-const GamePlay = require('../models/GamePlay.js');
 const { getStartEndofDateString } = require('../libs/date');
 
 module.exports.controller = (app) => {
   app.get('/tables', async (req, res) => {
-    const { startDate, endDate } = getStartEndofDateString(req.query.date);
-    const tables = await Table.find({ start: { $gt: startDate, $lt: endDate } });
-    res.send(tables);
+    try {
+      const { startDate, endDate } = getStartEndofDateString(req.query.date);
+      const tables = await Table.find({ start: { $gt: startDate, $lt: endDate } })
+        .populate({ path: 'gamePlays',
+          model: GamePlay,
+          populate: [
+            { path: 'game', model: Game, select: 'title' },
+            { path: 'responsible', model: User, select: 'name' },
+          ],
+        })
+        .exec();
+      res.send({
+        tables,
+      });
+    } catch (e) {
+      console.log(e);
+    }
   });
 
   app.get('/table/:id', async (req, res) => {
@@ -40,8 +56,11 @@ module.exports.controller = (app) => {
 
   app.post('/table/:id/gameplay', async (req, res) => {
     const newGamePlay = new GamePlay({
-      _id: req.body.id,
-      title: req.body.title,
+      game: req.body.gameId,
+      playerCount: req.body.playerCount,
+      start: req.body.start,
+      finish: req.body.finish,
+      responsible: req.body.userId,
     });
     const gamePlay = await newGamePlay.save();
     const table = await Table.findById(req.params.id);
