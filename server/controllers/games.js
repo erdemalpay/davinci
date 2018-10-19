@@ -1,12 +1,10 @@
 const Game = require('../models/Game');
 
 module.exports.controller = (app) => {
-  app.get('/games', (req, res) => {
-    Game.find({}, (err, games) => {
-      if (err) { console.log(err); }
-      res.send({
-        games,
-      });
+  app.get('/games', async (req, res) => {
+    const games = await Game.find().sort({ title: 1 });
+    res.send({
+      games,
     });
   });
 

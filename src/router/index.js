@@ -3,6 +3,7 @@ import Router from 'vue-router';
 import Games from '@/components/Games';
 import AddGame from '@/components/AddGame';
 import Tables from '@/components/Tables';
+import Table from '@/components/Table';
 
 Vue.use(Router);
 
@@ -23,6 +24,11 @@ export default new Router({
       path: '/tables',
       name: 'Tables',
       component: Tables,
+    },
+    {
+      path: '/table/:id',
+      name: 'Table',
+      component: Table,
     },
   ],
 });

@@ -1,209 +1,85 @@
 <template>
-  <v-layout row justify-center>
-      <v-btn flat @click="addTable = true" width="100%">Add New Table</v-btn>
-      <v-dialog v-model="addTable" width="300px">
-        <v-card>
-          <v-card-title class="headline">Create a new table?</v-card-title>
-          <v-card-actions>
-            <v-btn
-              flat="flat"
-              @click="addTable = false"
-            >
-              Cancel
-            </v-btn>
-
-            <v-btn
-              flat="flat"
-              @click="addTable = false; addNewTable()"
-            >
-              Create
-            </v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
-
-      <v-dialog
-        ref="dialog"
-        v-model="modal"
-        :return-value.sync="date"
-        persistent
-        lazy
-        full-width
-        width="290px"
-      >
-        <v-text-field
-          slot="activator"
-          v-model="date"
-          label="Date"
-          prepend-icon="event"
-          readonly
-        ></v-text-field>
-        <v-date-picker v-model="date"
-          @input="$refs.dialog.save(date); fetchTables()"></v-date-picker>
-      </v-dialog>
-    <v-layout row wrap>
-      <v-flex xs4 v-for="(table, tableIndex) in tables" :key="table._id">
-        <v-list two-line>
-            Table No:{{ tableIndex + 1 }}
-            <v-btn flat @click="addGamePlay = true" width="100%">Add Gameplay</v-btn>
-            <v-dialog v-model="addGamePlay" width="290px">
-              <v-card>
-                <v-card-title class="headline">Add Gameplay</v-card-title>
-                <v-card-text>
-            <v-container grid-list-md>
-              <v-layout wrap>
-                <v-flex xs12>
-                  <v-select
-                    v-model="playerCount"
-                    :items="[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]"
-                    label="Player Count"
-                    required
-                  ></v-select>
-                </v-flex>
-                <v-flex xs12>
-                  <v-autocomplete
-                    v-model="game"
-                    :items="games"
-                    item-text="title"
-                    item-value="_id"
-                    label="Games"
-                  ></v-autocomplete>
-                  <v-select
-                    v-model="responsible"
-                    :items="users"
-                    item-text="name"
-                    item-value="_id"
-                    label="Responsible"
-                    required
-                  ></v-select>
-                </v-flex>
-              </v-layout>
-            </v-container>
-          </v-card-text>
-                <v-card-actions>
-                  <v-btn
-                    flat="flat"
-                    @click="addGamePlay = false"
-                  >
-                    Cancel
-                  </v-btn>
-
-                  <v-btn
-                    flat="flat"
-                    @click="addGamePlay = false; addNewGamePlay(table._id)"
-                  >
-                    Create
-                  </v-btn>
-                </v-card-actions>
-              </v-card>
-            </v-dialog>
-            <template v-for="(gamePlay, index) in table.gamePlays">
-              <v-list-tile :key="index" avatar ripple>
-                <v-list-tile-content>
-                  <v-list-tile-title>Game: {{ gamePlay.game.title }}</v-list-tile-title>
-                  <v-list-tile-title>Player Count: {{ gamePlay.playerCount }}</v-list-tile-title>
-                  <v-list-tile-title>Responsible: {{ gamePlay.responsible.name }}
-                  </v-list-tile-title>
-                </v-list-tile-content>
-              </v-list-tile>
-              <v-divider v-if="index + 1 < table.gamePlays.length"
-                :key="`divider-${index}`"></v-divider>
-            </template>
-          </v-list>
+  <v-container>
+    <v-layout>
+      <v-flex>
+        <v-btn round @click="tableDialog = true" width="100%">Add New Table</v-btn>
+        <TableDialog
+          :initialTable="{ date }"
+          :dialog="tableDialog"
+          @closeDialog="tableDialog=false"
+          @fetchTables="fetchTables"
+        >
+        </TableDialog>
+      </v-flex>
+      <v-flex>
+        <v-dialog
+          ref="dialog"
+          v-model="dateDialog"
+          :return-value.sync="date"
+          persistent
+          lazy
+          full-width
+          width="290px"
+        >
+          <v-text-field
+            slot="activator"
+            v-model="date"
+            label="Date"
+            prepend-icon="event"
+            readonly
+          ></v-text-field>
+          <v-date-picker v-model="date"
+            @input="$refs.dialog.save(date); fetchTables()"></v-date-picker>
+        </v-dialog>
       </v-flex>
     </v-layout>
-  </v-layout>
+    <v-layout wrap>
+      <v-flex class="tablecard" xs4 v-for="table in tables" :key="table._id">
+        <TableCard
+          :table="table"
+        ></TableCard>
+      </v-flex>
+    </v-layout>
+  </v-container>
 </template>
 
 <script>
-import axios from 'axios';
-import moment from 'moment';
+import { mapGetters, mapActions } from 'vuex';
+
+import TableCard from './TableCard';
+import TableDialog from './TableDialog';
 
 export default {
   name: 'Tables',
   data() {
     return {
-      date: moment().format('YYYY-MM-DD'),
-      menu: false,
-      modal: false,
-      addTable: false,
-      addGamePlay: false,
-      tables: [],
-      games: [],
-      users: [],
-      playerCount: 0,
-      game: null,
-      responsible: null,
+      dateDialog: false,
+      tableDialog: false,
     };
   },
+  computed: {
+    ...mapGetters([
+      'games',
+      'users',
+      'tables',
+      'date',
+    ]),
+  },
   mounted() {
-    this.fetchTables();
     this.fetchGames();
+    this.fetchTables();
     this.fetchUsers();
   },
   methods: {
-    async fetchTables() {
-      return axios({
-        method: 'get',
-        url: `http://localhost:8081/tables?date=${this.date}`,
-      })
-        .then((response) => {
-          console.log(response.data);
-          this.tables = response.data.tables;
-        })
-        .catch(() => {});
-    },
-    async fetchGames() {
-      return axios({
-        method: 'get',
-        url: 'http://localhost:8081/games',
-      })
-        .then((response) => {
-          console.log('Games:', response.data);
-          this.games = response.data.games;
-        })
-        .catch(() => {});
-    },
-    async fetchUsers() {
-      return axios({
-        method: 'get',
-        url: 'http://localhost:8081/users',
-      })
-        .then((response) => {
-          this.users = response.data.users;
-        })
-        .catch(() => {});
-    },
-    async addNewTable() {
-      return axios({
-        method: 'post',
-        data: {
-          date: new Date(),
-        },
-        url: 'http://localhost:8081/tables',
-      })
-        .then(() => {
-          this.fetchTables();
-        })
-        .catch(() => {});
-    },
-    async addNewGamePlay(tableId) {
-      console.log(this.responsible);
-      console.log(this.game);
-      return axios({
-        method: 'post',
-        data: {
-          playerCount: this.playerCount,
-          gameId: this.game,
-          userId: this.responsible,
-        },
-        url: `http://localhost:8081/table/${tableId}/gameplay`,
-      })
-        .then(() => {
-          this.fetchTables();
-        })
-        .catch(() => {});
-    },
+    ...mapActions([
+      'fetchGames',
+      'fetchTables',
+      'fetchUsers',
+    ]),
+  },
+  components: {
+    TableCard,
+    TableDialog,
   },
 };
 </script>

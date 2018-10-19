@@ -13,6 +13,7 @@ jwtOptions.jwtFromRequest = ExtractJwt.fromAuthHeaderWithScheme('jwt');
 jwtOptions.secretOrKey = 'movieratingapplicationsecretkey'; */
 
 const gameRoute = require('./controllers/games');
+const gameplayRoute = require('./controllers/gameplays');
 const tableRoute = require('./controllers/tables');
 const userRoute = require('./controllers/users');
 
@@ -37,7 +38,7 @@ mongoose.connect('mongodb://localhost/davinci', () => {
 
 require('./models/Game');
 require('./models/User');
-require('./models/GamePlay');
+require('./models/Gameplay');
 require('./models/Table');
 
 // The request handler must be the first middleware on the app
@@ -48,6 +49,7 @@ app.get('/error', () => {
 });
 
 gameRoute.controller(app);
+gameplayRoute.controller(app);
 tableRoute.controller(app);
 userRoute.controller(app);
 

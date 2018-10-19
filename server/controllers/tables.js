@@ -1,21 +1,19 @@
-const moment = require('moment');
+const _ = require('lodash');
 const Game = require('../models/Game');
 const User = require('../models/User');
-const GamePlay = require('../models/GamePlay');
+const Gameplay = require('../models/Gameplay');
 const Table = require('../models/Table');
-
-const { getStartEndofDateString } = require('../libs/date');
+const { asyncForEach } = require('../libs/async');
 
 module.exports.controller = (app) => {
   app.get('/tables', async (req, res) => {
     try {
-      const { startDate, endDate } = getStartEndofDateString(req.query.date);
-      const tables = await Table.find({ start: { $gt: startDate, $lt: endDate } })
-        .populate({ path: 'gamePlays',
-          model: GamePlay,
+      const tables = await Table.find({ date: req.query.date })
+        .populate({ path: 'gameplays',
+          model: Gameplay,
           populate: [
-            { path: 'game', model: Game, select: 'title' },
-            { path: 'responsible', model: User, select: 'name' },
+            { path: 'game', model: Game },
+            { path: 'mentor', model: User, select: 'name' },
           ],
         })
         .exec();
@@ -28,16 +26,22 @@ module.exports.controller = (app) => {
   });
 
   app.get('/table/:id', async (req, res) => {
-    const table = await Table.findById(req.params.id).populate('gamePlays').exec();
-    res.send(table);
+    const table = await Table.findById(req.params.id)
+      .populate({ path: 'gameplays',
+        model: Gameplay,
+        populate: [
+          { path: 'game', model: Game },
+          { path: 'mentor', model: User, select: 'name' },
+        ],
+      })
+      .exec();
+    res.send({
+      table,
+    });
   });
 
   app.post('/tables', (req, res) => {
-    const startDate = moment(req.body.date).toDate();
-    const newTable = new Table({
-      start: startDate,
-    });
-
+    const newTable = new Table(req.body);
     newTable.save((err, table) => {
       if (err) { console.log(err); }
       res.send(table);
@@ -46,8 +50,9 @@ module.exports.controller = (app) => {
 
   app.put('/table/:id', async (req, res) => {
     const updatedTable = await Table.findById(req.params.id);
-    updatedTable.start = req.body.start;
-    updatedTable.finish = req.body.finish;
+    updatedTable.name = req.body.name;
+    updatedTable.startHour = req.body.startHour;
+    updatedTable.finishHour = req.body.finishHour;
     updatedTable.save((err, table) => {
       if (err) { console.log(err); }
       res.send(table);
@@ -55,17 +60,31 @@ module.exports.controller = (app) => {
   });
 
   app.post('/table/:id/gameplay', async (req, res) => {
-    const newGamePlay = new GamePlay({
-      game: req.body.gameId,
-      playerCount: req.body.playerCount,
-      start: req.body.start,
-      finish: req.body.finish,
-      responsible: req.body.userId,
-    });
-    const gamePlay = await newGamePlay.save();
+    const newGameplay = new Gameplay(req.body.gameplay);
+    const gameplay = await newGameplay.save();
     const table = await Table.findById(req.params.id);
-    table.gamePlays.push(gamePlay);
+    table.gameplays.push(gameplay);
     await table.save();
-    res.send(gamePlay);
+    res.send(gameplay);
+  });
+
+  app.delete('/table/:tableId/gameplay/:gameplayId', async (req, res) => {
+    await Gameplay.findByIdAndDelete(req.params.gameplayId);
+    const table = await Table.findById(req.params.tableId).exec();
+    _.remove(table.gameplays, gameplay => (
+      gameplay._id.toString() === req.params.gameplayId
+    ));
+    table.markModified('gameplays');
+    await table.save();
+    res.send(table);
+  });
+
+  app.delete('/tables/:tableId', async (req, res) => {
+    const table = await Table.findById(req.params.tableId).exec();
+    await asyncForEach(table.gameplays, async (gameplayId) => {
+      await Gameplay.findByIdAndDelete(gameplayId);
+    });
+    await Table.findByIdAndDelete(req.params.tableId);
+    res.sendStatus(204);
   });
 };
