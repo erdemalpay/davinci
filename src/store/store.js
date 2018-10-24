@@ -5,7 +5,7 @@ import moment from 'moment';
 
 Vue.use(Vuex);
 
-const apiurl = 'http://localhost:8081/api';
+const apiurl = process.env.API_URL;
 
 export default new Vuex.Store({
   state: {
