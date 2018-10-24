@@ -1,4 +1,4 @@
-FROM node:8-alpine
+FROM node:8
 
 RUN apk add -U tzdata
 RUN cp /usr/share/zoneinfo/Europe/Istanbul /etc/localtime
