@@ -8,7 +8,7 @@ release:
   image: docker:latest
   environment:
     name: production
-    url: https://api.davinciescape.com
+    url: http://panel.davinciescape.com
   only:
     - master
   when: on_success
