@@ -17,5 +17,7 @@ RUN printenv > ./.env
 
 RUN npm install
 
+RUN npm run build
+
 CMD ["pm2-docker", "pm2.json"]
 
