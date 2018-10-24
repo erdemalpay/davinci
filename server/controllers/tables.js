@@ -6,7 +6,7 @@ const Table = require('../models/Table');
 const { asyncForEach } = require('../libs/async');
 
 module.exports.controller = (app) => {
-  app.get('/tables', async (req, res) => {
+  app.get('/api/tables', async (req, res) => {
     try {
       const tables = await Table.find({ date: req.query.date })
         .populate({ path: 'gameplays',
@@ -25,7 +25,7 @@ module.exports.controller = (app) => {
     }
   });
 
-  app.get('/table/:id', async (req, res) => {
+  app.get('/api/table/:id', async (req, res) => {
     const table = await Table.findById(req.params.id)
       .populate({ path: 'gameplays',
         model: Gameplay,
@@ -40,7 +40,7 @@ module.exports.controller = (app) => {
     });
   });
 
-  app.post('/tables', (req, res) => {
+  app.post('/api/tables', (req, res) => {
     const newTable = new Table(req.body);
     newTable.save((err, table) => {
       if (err) { console.log(err); }
@@ -48,9 +48,10 @@ module.exports.controller = (app) => {
     });
   });
 
-  app.put('/table/:id', async (req, res) => {
+  app.put('/api/table/:id', async (req, res) => {
     const updatedTable = await Table.findById(req.params.id);
     updatedTable.name = req.body.name;
+    updatedTable.playerCount = req.body.playerCount;
     updatedTable.startHour = req.body.startHour;
     updatedTable.finishHour = req.body.finishHour;
     updatedTable.save((err, table) => {
@@ -59,7 +60,7 @@ module.exports.controller = (app) => {
     });
   });
 
-  app.post('/table/:id/gameplay', async (req, res) => {
+  app.post('/api/table/:id/gameplay', async (req, res) => {
     const newGameplay = new Gameplay(req.body.gameplay);
     const gameplay = await newGameplay.save();
     const table = await Table.findById(req.params.id);
@@ -68,7 +69,7 @@ module.exports.controller = (app) => {
     res.send(gameplay);
   });
 
-  app.delete('/table/:tableId/gameplay/:gameplayId', async (req, res) => {
+  app.delete('/api/table/:tableId/gameplay/:gameplayId', async (req, res) => {
     await Gameplay.findByIdAndDelete(req.params.gameplayId);
     const table = await Table.findById(req.params.tableId).exec();
     _.remove(table.gameplays, gameplay => (
@@ -79,7 +80,7 @@ module.exports.controller = (app) => {
     res.send(table);
   });
 
-  app.delete('/tables/:tableId', async (req, res) => {
+  app.delete('/api/tables/:tableId', async (req, res) => {
     const table = await Table.findById(req.params.tableId).exec();
     await asyncForEach(table.gameplays, async (gameplayId) => {
       await Gameplay.findByIdAndDelete(gameplayId);

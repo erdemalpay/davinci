@@ -1,46 +1,95 @@
 <template>
-  <v-layout row wrap>
-    <v-flex xs12>
-      <v-btn flat v-bind:to="{ name: 'AddGame' }" width="100%">Add New Game</v-btn>
-    </v-flex>
-    <v-flex xs4 v-for="game in games" :key="game._id">
-      <v-card>
-        <v-card-title primary-title>
-          <div>
-            <div class="headline">
-              <v-btn flat v-bind:to="`/games/${game._id}`">{{ game.title }}</v-btn>
-            </div>
-            <span class="grey--text">{{ game._id }}</span>
-          </div>
-        </v-card-title>
-      </v-card>
-    </v-flex>
-  </v-layout>
+  <v-card>
+    <v-card-title>
+      Games
+      <v-spacer></v-spacer>
+      <v-text-field
+        v-model="search"
+        append-icon="search"
+        label="Search"
+        single-line
+        hide-details
+      ></v-text-field>
+    </v-card-title>
+    <v-data-table
+      :headers="headers"
+      :items="filteredGames"
+       :search="search"
+      :rows-per-page-items="rowsPerPage"
+      :rowsPerPage=10
+      class="elevation-1"
+    >
+      <template slot="items" slot-scope="props">
+        <td class="justify-center">{{ props.item.title }}</td>
+        <td class="justify-center"><v-checkbox readonly v-model="props.item.expansion"/></td>
+        <td class="justify-center">
+          <v-icon
+            small
+            @click="deleteItem(props.item._id)"
+          >
+            delete
+          </v-icon>
+        </td>
+      </template>
+    </v-data-table>
+  </v-card>
 </template>
 
 <script>
-import axios from 'axios';
+import { mapGetters, mapActions } from 'vuex';
+
+import GameCard from './GameCard';
 
 export default {
-  name: 'Games',
   data() {
     return {
-      games: [],
+      search: '',
+      rowsPerPage: [10, 50, 100],
+      headers: [
+        {
+          text: 'Game',
+          align: 'left',
+          value: 'title',
+        },
+        {
+          text: 'Expansion',
+          value: 'expansion',
+        },
+        {
+          text: '',
+          value: 'action',
+        },
+      ],
     };
+  },
+  computed: {
+    ...mapGetters([
+      'games',
+    ]),
+    filteredGames() {
+      return this.games;
+    },
+    paginatedGames() {
+      const start = this.pageNumber * this.size;
+      const end = start + this.size;
+      return this.filteredGames.slice(start, end);
+    },
+    paginationLength() {
+      return Math.floor(this.filteredGames.length / this.size);
+    },
   },
   mounted() {
     this.fetchGames();
   },
+  components: {
+    GameCard,
+  },
   methods: {
-    async fetchGames() {
-      return axios({
-        method: 'get',
-        url: 'http://localhost:8081/games',
-      })
-        .then((response) => {
-          this.games = response.data.games;
-        })
-        .catch(() => {});
+    ...mapActions([
+      'fetchGames',
+    ]),
+    deleteItem(gameId) {
+      this.$store.dispatch('deleteGame', gameId);
     },
   },
 };

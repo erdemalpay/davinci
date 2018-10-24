@@ -1,25 +1,13 @@
 <template>
-  <v-container>
+  <v-container fluid>
     <v-layout>
-      <v-flex>
-        <v-btn round @click="tableDialog = true" width="100%">Add New Table</v-btn>
-        <TableDialog
-          :initialTable="{ date }"
-          :dialog="tableDialog"
-          @closeDialog="tableDialog=false"
-          @fetchTables="fetchTables"
-        >
-        </TableDialog>
-      </v-flex>
       <v-flex>
         <v-dialog
           ref="dialog"
           v-model="dateDialog"
-          :return-value.sync="date"
-          persistent
           lazy
           full-width
-          width="290px"
+          width="310px"
         >
           <v-text-field
             slot="activator"
@@ -28,8 +16,8 @@
             prepend-icon="event"
             readonly
           ></v-text-field>
-          <v-date-picker v-model="date"
-            @input="$refs.dialog.save(date); fetchTables()"></v-date-picker>
+          <v-date-picker v-model="newDate"
+            @input="updateDate(newDate)"></v-date-picker>
         </v-dialog>
       </v-flex>
     </v-layout>
@@ -40,12 +28,28 @@
         ></TableCard>
       </v-flex>
     </v-layout>
+    <v-flex>
+      <TableDialog
+        ref="dialogRef"
+      >
+        <v-btn
+            id="addButton"
+            fab
+            slot="dialogActivator"
+            top
+            right
+            @click="$refs.dialogRef.setDefaultTable()"
+          >
+          <v-icon>add</v-icon>
+        </v-btn>
+      </TableDialog>
+    </v-flex>
   </v-container>
 </template>
 
 <script>
 import { mapGetters, mapActions } from 'vuex';
-
+import moment from 'moment';
 import TableCard from './TableCard';
 import TableDialog from './TableDialog';
 
@@ -54,7 +58,7 @@ export default {
   data() {
     return {
       dateDialog: false,
-      tableDialog: false,
+      newDate: '',
     };
   },
   computed: {
@@ -76,6 +80,18 @@ export default {
       'fetchTables',
       'fetchUsers',
     ]),
+    updateDate(date) {
+      this.dateDialog = false;
+      this.$store.dispatch('updateDate', date);
+    },
+    makeNewTable() {
+      return {
+        name: '',
+        playerCount: undefined,
+        date: this.date,
+        startHour: moment().format('HH:mm'),
+      };
+    },
   },
   components: {
     TableCard,

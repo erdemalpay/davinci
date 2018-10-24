@@ -11,7 +11,7 @@ export default new Router({
   mode: 'history',
   routes: [
     {
-      path: '/',
+      path: '/games',
       name: 'Games',
       component: Games,
     },
@@ -21,7 +21,7 @@ export default new Router({
       component: AddGame,
     },
     {
-      path: '/tables',
+      path: '/',
       name: 'Tables',
       component: Tables,
     },

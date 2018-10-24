@@ -2,6 +2,14 @@
   <v-app id="inspire">
     <v-navigation-drawer fixed v-model="drawer" app>
       <v-list dense>
+        <router-link v-bind:to=" {name:'Tables' }" class="side_bar_link">
+          <v-list-tile>
+            <v-list-tile-action>
+              <v-icon>home</v-icon>
+            </v-list-tile-action>
+            <v-list-tile-content>Tables</v-list-tile-content>
+          </v-list-tile>
+        </router-link>
         <router-link v-bind:to="{ name: 'Games' }" class="side_bar_link">
           <v-list-tile>
             <v-list-tile-action>
@@ -16,14 +24,6 @@
               <v-icon>person</v-icon>
             </v-list-tile-action>
             <v-list-tile-content>Users</v-list-tile-content>
-          </v-list-tile>
-        </router-link>
-        <router-link v-bind:to=" {name:'Tables' }" class="side_bar_link">
-          <v-list-tile>
-            <v-list-tile-action>
-              <v-icon>home</v-icon>
-            </v-list-tile-action>
-            <v-list-tile-content>Tables</v-list-tile-content>
           </v-list-tile>
         </router-link>
       </v-list>

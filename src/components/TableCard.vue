@@ -38,105 +38,38 @@
             readonly
             label="Current Game"
             v-model="currentGame"
+            prepend-icon="user"
+          >
+          </v-text-field>
+        </v-flex>
+      </v-layout>
+      <v-layout>
+        <v-flex>
+          <v-text-field
+            readonly
+            label="Player Count"
+            type="number"
+            return-masked-value
+            v-model="table.playerCount"
             prepend-icon="game"
           >
           </v-text-field>
         </v-flex>
       </v-layout>
     </v-container>
-    <v-speed-dial
-      v-model="speeddial"
-      top
-      right
-      direction="bottom"
-      transition="slide-y-transition"
-    >
-      <v-btn
-        slot="activator"
-        v-model="speeddial"
-        fab
-      >
-        <v-icon v-if="!speeddial">arrow_drop_down</v-icon>
-        <v-icon v-if="speeddial">close</v-icon>
-      </v-btn>
-      <v-tooltip right>
-        <v-btn
-          slot="activator"
-          fab
-          dark
-          small
-          color="indigo"
-          @click="gameplayDialog = true;"
-        >
-          <v-icon>add</v-icon>
-        </v-btn>
-        Add Gameplay
-      </v-tooltip>
-      <v-tooltip right>
-        <v-btn
-          slot="activator"
-          fab
-          dark
-          small
-          color="green"
-          @click="editDialog = true"
-        >
-          <v-icon>edit</v-icon>
-        </v-btn>
-        Edit Table
-      </v-tooltip>
-      <v-tooltip right>
-        <v-btn
-          slot="activator"
-          fab
-          dark
-          small
-          color="red"
-          @click="deleteDialog = true"
-        >
-          <v-icon>delete</v-icon>
-        </v-btn>
-        Delete Table
-      </v-tooltip>
-    </v-speed-dial>
-    <GameplayDialog
-      :tableId="table._id"
-      :initialGameplay="{ date: table.date }"
-      :dialog="gameplayDialog"
-      :edit=false
-      @closeDialog="gameplayDialog = false"
-    >
-    </GameplayDialog>
-    <DeleteDialog
-      :id="table.id"
-      :dialog="deleteDialog"
-      @closeDialog="deleteDialog = false"
-      @delete="deleteTable"
-    >
-    </DeleteDialog>
-    <TableDialog
-      edit=true
-      :dialog="editDialog"
-      :initialTable="table"
-      @closeDialog="editDialog = false"
-    >
-    </TableDialog>
+    <TableSpeeddial
+      :table="table"
+    ></TableSpeeddial>
   </v-card>
 </template>
 <script>
-import { mapGetters, mapActions } from 'vuex';
+import { mapGetters } from 'vuex';
 
-import GameplayDialog from './GameplayDialog';
-import DeleteDialog from './DeleteDialog';
-import TableDialog from './TableDialog';
+import TableSpeeddial from './TableSpeeddial';
 
 export default {
   data() {
     return {
-      gameplayDialog: false,
-      deleteDialog: false,
-      editDialog: false,
-      speeddial: false,
     };
   },
   props: ['table'],
@@ -151,18 +84,8 @@ export default {
       'users',
     ]),
   },
-  methods: {
-    ...mapActions([
-      'fetchTables',
-    ]),
-    deleteTable() {
-      this.$store.dispatch('deleteTable', this.table._id);
-    },
-  },
   components: {
-    GameplayDialog,
-    DeleteDialog,
-    TableDialog,
+    TableSpeeddial,
   },
 };
 </script>

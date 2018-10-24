@@ -1,17 +1,17 @@
 <template>
-  <v-dialog v-model="dialog" width="290px">
+  <v-dialog v-model="dialog">
+    <slot name="dialogActivator" slot="activator"></slot>
     <v-card>
       <v-card-title class="headline">Are you sure to delete?</v-card-title>
       <v-card-actions>
         <v-btn
-          flat="flat"
-          @click="$emit('closeDialog')"
+          @click="close"
         >
           Cancel
         </v-btn>
+        <v-spacer/>
         <v-btn
-          flat="flat"
-          @click="$emit('closeDialog');$emit('delete', id)"
+          @click="submit"
         >
           Delete
         </v-btn>
@@ -21,7 +21,21 @@
 </template>
 <script>
 export default {
-  props: ['dialog', 'id'],
+  data() {
+    return {
+      dialog: false,
+    };
+  },
+  props: ['id'],
+  methods: {
+    submit() {
+      this.$emit('delete', this.id);
+      this.close();
+    },
+    close() {
+      this.dialog = false;
+    },
+  },
 };
 </script>
 

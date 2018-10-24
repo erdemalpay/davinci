@@ -4,6 +4,7 @@ const Gameplay = require('./Gameplay');
 const Schema = mongoose.Schema;
 const TableSchema = new Schema({
   gameplays: [{ type: Schema.Types.ObjectId, ref: Gameplay }],
+  playerCount: Number,
   name: String,
   date: String,
   startHour: String,

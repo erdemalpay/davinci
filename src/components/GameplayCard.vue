@@ -45,7 +45,6 @@
         <v-flex>
           <v-text-field
             v-model="gameplay.mentor.name"
-            value="name"
             label="Mentor"
             readonly
           >
@@ -68,63 +67,63 @@
           <v-icon v-if="speeddial">close</v-icon>
         </v-btn>
         <v-tooltip right>
-          <v-btn
+          <GameplayDialog
             slot="activator"
-            fab
-            dark
-            small
-            color="green"
-            @click="editDialog = true"
+            :tableId="tableId"
+            :edit=true
+            ref="gameplayDialogRef"
           >
-            <v-icon>edit</v-icon>
-          </v-btn>
+            <v-btn
+              slot="dialogActivator"
+              fab
+              dark
+              small
+              color="green"
+              @click="$refs.gameplayDialogRef.setGameplay(gameplay)"
+            >
+              <v-icon>edit</v-icon>
+            </v-btn>
+          </GameplayDialog>
           Edit Gameplay
         </v-tooltip>
         <v-tooltip right>
-          <v-btn
+          <DeleteDialog
             slot="activator"
+            :id="gameplay.id"
+            @delete="deleteGameplay"
+          >
+          <v-btn
+            slot="dialogActivator"
             fab
             dark
             small
             color="red"
-            @click="deleteDialog = true"
           >
             <v-icon>delete</v-icon>
           </v-btn>
+          </DeleteDialog>
           Delete Gameplay
         </v-tooltip>
       </v-speed-dial>
-      <GameplayDialog
-        :tableId="tableId"
-        :initialGameplay="gameplay"
-        :dialog="gameplayDialog"
-        :edit=true
-        @closeDialog="gameplayDialog = false"
-      >
-      </GameplayDialog>
-      <DeleteDialog
-        :id="gameplay.id"
-        :dialog="deleteDialog"
-        @closeDialog="deleteDialog = false"
-        @delete="deleteGameplay"
-      >
-      </DeleteDialog>
     </v-container>
   </v-card>
 </template>
 <script>
+import { mapGetters } from 'vuex';
+
+import GameplayDialog from './GameplayDialog';
+import DeleteDialog from './DeleteDialog';
+
 export default {
   data() {
     return {
       speeddial: false,
-      gameplayDialog: false,
-      deleteDialog: false,
     };
   },
-  props: {
-    gameplay: Object,
-    tableId: String,
-  },
+  props: [
+    'gameplay',
+    'tableId',
+  ],
   computed: {
     ...mapGetters([
       'date',
@@ -133,8 +132,12 @@ export default {
   },
   methods: {
     deleteGameplay() {
-      this.$store.dispatch('deleteGameplay', { tableId: this.tableId, gameplayId : this.gameplay._id });
+      this.$store.dispatch('deleteGameplay', { tableId: this.tableId, gameplayId: this.gameplay._id });
     },
-  }
+  },
+  components: {
+    GameplayDialog,
+    DeleteDialog,
+  },
 };
 </script>

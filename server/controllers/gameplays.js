@@ -1,7 +1,7 @@
 const Gameplay = require('../models/Gameplay');
 
 module.exports.controller = (app) => {
-  app.put('/gameplay/:id', async (req, res) => {
+  app.put('/api/gameplay/:id', async (req, res) => {
     const gameplay = await Gameplay.findById(req.params.id);
     gameplay.playerCount = req.body.playerCount;
     gameplay.mentor = req.body.mentor;

@@ -1,123 +1,79 @@
 <template>
   <v-layout>
-    <v-dialog v-model="dialog" width="290px">
+    <v-dialog v-model="dialog" persistent>
+      <slot name="dialogActivator" slot="activator"></slot>
       <v-card>
-        <v-card-title class="headline">
-          {{ edit ? 'Update Gameplay' : 'Add Gameplay' }}</v-card-title>
-        <v-card-text>
-          <v-container grid-list-md>
-            <v-layout wrap>
-              <v-text-field
-                slot="activator"
-                v-model="gameplay.date"
-                label="Date"
-                prepend-icon="event"
-                readonly
-              ></v-text-field>
-              <v-flex xs12>
-                <v-menu
-                  ref="startTimeMenu"
-                  :close-on-content-click="false"
-                  v-model="menuStartTime"
-                  :nudge-right="40"
-                  lazy
-                  transition="scale-transition"
-                  offset-y
-                  full-width
-                  max-width="290px"
-                  min-width="290px"
-                >
+        <v-form model="valid" ref="form" lazy-validation>
+          <v-card-title class="headline">
+            {{ edit ? 'Update Gameplay' : 'Add Gameplay' }}</v-card-title>
+          <v-card-text>
+            <v-container grid-list-md>
+              <v-layout wrap>
+                <v-text-field
+                  slot="activator"
+                  v-model="gameplay.date"
+                  label="Date"
+                  prepend-icon="event"
+                  readonly
+                ></v-text-field>
+                <v-flex xs12>
                   <v-text-field
-                    slot="activator"
-                    v-model="gameplay.startHour"
                     type="time"
-                    label="Start Time"
-                    prepend-icon="access_time"
-                    readonly
-                  ></v-text-field>
-                  <v-time-picker
-                    v-if="menuStartTime"
+                    label="Start"
                     v-model="gameplay.startHour"
-                    full-width
-                    format="24hr"
-                    :allowedHours="allowedHours"
-                    @change="menuStartTime = false;"
-                  ></v-time-picker>
-                </v-menu>
-                <v-menu
-                  ref="finishTimeMenu"
-                  :close-on-content-click="false"
-                  v-model="menuFinishTime"
-                  :nudge-right="40"
-                  lazy
-                  transition="scale-transition"
-                  offset-y
-                  full-width
-                  max-width="290px"
-                  min-width="290px"
-                >
+                  >
+                  </v-text-field>
                   <v-text-field
-                    slot="activator"
-                    v-model="gameplay.finishHour"
                     type="time"
-                    label="Finish Time"
-                    prepend-icon="access_time"
-                    readonly
-                  ></v-text-field>
-                  <v-time-picker
-                    v-if="menuFinishTime"
-                    full-width
-                    format="24hr"
-                    :allowedHours="allowedHours"
+                    label="Finish"
                     v-model="gameplay.finishHour"
-                    @change="menuFinishTime = false;"
-                  ></v-time-picker>
-                </v-menu>
-                <v-select
-                  v-model="gameplay.playerCount"
-                  :items="[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]"
-                  label="Player Count"
-                  required
-                ></v-select>
-                <v-autocomplete
-                  v-model="gameplay.game"
-                  :items="mainGames"
-                  item-text="title"
-                  item-value="_id"
-                  label="Game"
-                ></v-autocomplete>
-                <v-select
-                  v-model="gameplay.mentor"
-                  :items="users"
-                  item-text="name"
-                  item-value="_id"
-                  label="Mentor"
-                  required
-                ></v-select>
-              </v-flex>
-            </v-layout>
-          </v-container>
-        </v-card-text>
+                  >
+                  </v-text-field>
+                  <v-text-field
+                    label="Player Count"
+                    type="number"
+                    :rules="playerCountRules"
+                    required
+                    v-model="gameplay.playerCount"
+                    min=1
+                  >
+                  </v-text-field>
+                  <v-autocomplete
+                    v-model="gameplay.game"
+                    :items="mainGames"
+                    item-text="title"
+                    item-value="_id"
+                    required
+                    :rules="gameRules"
+                    label="Game"
+                  ></v-autocomplete>
+                  <v-select
+                    v-model="gameplay.mentor"
+                    :items="users"
+                    item-text="name"
+                    return-object
+                    label="Mentor"
+                    :rules="mentorRules"
+                    required
+                  ></v-select>
+                </v-flex>
+              </v-layout>
+            </v-container>
+          </v-card-text>
+        </v-form>
+        <v-divider></v-divider>
         <v-card-actions>
           <v-btn
-            flat="flat"
-            @click="$emit('closeDialog')"
+            @click="close"
           >
             Cancel
           </v-btn>
+          <v-spacer/>
           <v-btn
-            v-if="!edit"
-            flat="flat"
-            @click="$emit('closeDialog'); addNewGameplay()"
+            @click="submit"
+            :disabled="!valid"
           >
-            Create
-          </v-btn>
-          <v-btn
-            v-if="edit"
-            flat="flat"
-            @click="$emit('closeDialog'); editSelectedGameplay()"
-          >
-            Update
+            {{ edit ? 'Update' : 'Create' }}
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -125,45 +81,73 @@
   </v-layout>
 </template>
 <script>
+import Vue from 'vue';
 import moment from 'moment';
-import { mapGetters } from 'vuex';
+import { mapGetters, mapActions } from 'vuex';
 
 export default {
   data() {
     return {
+      valid: true,
+      dialog: false,
       menuStartTime: false,
       menuFinishTime: false,
+      gameRules: [
+        v => !!v || 'Game should be selected',
+      ],
+      mentorRules: [
+        v => !!v || 'Mentor should be selected',
+      ],
+      playerCountRules: [
+        v => !!v || 'Player count should be at least 1',
+      ],
+      gameplay: {},
     };
   },
   computed: {
-    gameplay() {
-      const tempGameplay = this.initialGameplay;
-      if (!tempGameplay.startHour) {
-        tempGameplay.startHour = moment().format('HH:mm');
-      }
-      return tempGameplay;
-    },
     ...mapGetters([
       'mainGames',
       'users',
     ]),
   },
-  props: {
-    initialGameplay: Object,
-    tableId: String,
-    dialog: Boolean,
-    edit: Boolean,
-  },
+  props: [
+    'tableId',
+    'edit',
+  ],
   methods: {
-    allowedHours: v => v >= 12 && v <= 23,
+    ...mapActions([
+      'fetchTables',
+    ]),
     addNewGameplay() {
       this.$store.dispatch('addNewGameplay', { gameplay: this.gameplay, tableId: this.tableId });
     },
-    updateGameplay() {
-      this.$store.dispatch('updateGameplay', this.gameplay);
+    async updateGameplay() {
+      await this.$store.dispatch('updateGameplay', this.gameplay);
+      await this.$store.dispatch('fetchTables');
+      this.$emit('update');
     },
-    deleteGameplay() {
-      this.$store.dispatch('deleteGameplay', { gameplayId: this.gameplay._id, tableId: this.tableId });
+    setDefaultGameplay(playerCount, date) {
+      this.gameplay = {
+        startHour: moment().format('HH:mm'),
+        playerCount,
+        date,
+      };
+    },
+    setGameplay(gameplay) {
+      this.gameplay = Vue.util.extend({}, gameplay);
+    },
+    submit() {
+      if (this.$refs.form.validate()) {
+        this.close();
+        if (this.edit) {
+          this.updateGameplay();
+        } else {
+          this.addNewGameplay();
+        }
+      }
+    },
+    close() {
+      this.dialog = false;
     },
   },
 };

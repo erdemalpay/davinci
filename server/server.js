@@ -3,6 +3,9 @@ const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const morgan = require('morgan');
+const serveStatic = require('serve-static');
+const history = require('connect-history-api-fallback');
+const path = require('path');
 /* const jwt = require('jsonwebtoken');
 const passport = require('passport');
 const passportJWT = require('passport-jwt');
@@ -52,6 +55,9 @@ gameRoute.controller(app);
 gameplayRoute.controller(app);
 tableRoute.controller(app);
 userRoute.controller(app);
+
+app.use(history());
+app.use(serveStatic(path.join(__dirname, '..', 'dist')));
 
 router.get('/', (req, res) => {
   res.json({ message: 'API Initialized!' });

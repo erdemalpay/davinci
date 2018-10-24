@@ -5,7 +5,6 @@ const { fillGames } = require('./fillGames');
 mongoose.connect('mongodb://localhost/davinci', async () => {
   console.log('Connection has been made');
   await fillGames();
-  console.log('TRACE');
   process.exit(0);
 }).catch((err) => {
   console.error('App starting error:', err.stack);

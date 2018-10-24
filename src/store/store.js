@@ -5,7 +5,7 @@ import moment from 'moment';
 
 Vue.use(Vuex);
 
-const apiurl = 'http://localhost:8081';
+const apiurl = 'http://localhost:8081/api';
 
 export default new Vuex.Store({
   state: {
@@ -22,6 +22,7 @@ export default new Vuex.Store({
     tables: state => state.tables,
     date: state => state.date,
     getTableById: state => id => state.tables.find(table => table._id === id),
+    getUserById: state => id => state.users.find(user => user._id === id),
   },
   mutations: {
     GAMES: (state, payload) => {
@@ -47,7 +48,6 @@ export default new Vuex.Store({
         url: `${apiurl}/games`,
       });
       commit('GAMES', response.data.games);
-      console.log(response.data.games.filter(game => !game.expansion));
       commit('MAINGAMES', response.data.games.filter(game => !game.expansion));
     },
     async fetchUsers({ commit }) {
@@ -83,7 +83,7 @@ export default new Vuex.Store({
       await axios({
         method: 'put',
         data: table,
-        url: `${apiurl}/table/${this.table._id}`,
+        url: `${apiurl}/table/${table._id}`,
       });
       dispatch('fetchTables');
     },
@@ -115,6 +115,17 @@ export default new Vuex.Store({
         url: `${apiurl}/table/${tableId}/gameplay/${gameplayId}`,
       });
       dispatch('fetchTables');
+    },
+    updateDate({ commit, dispatch }, date) {
+      commit('DATE', date);
+      dispatch('fetchTables');
+    },
+    async deleteGame({ dispatch }, gameId) {
+      await axios({
+        method: 'delete',
+        url: `${apiurl}/games/${gameId}`,
+      });
+      dispatch('fetchGames');
     },
   },
 });

@@ -31,10 +31,18 @@ a.side_bar_link {
   position: absolute;
 }
 
+#addButton {
+  position: absolute;
+}
+
 .tablecard {
   padding: 10px;
 }
 
 .gameplaycard {
   padding: 10px;
+}
+
+.v-dialog {
+  width: 300px;
 }

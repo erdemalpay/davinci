@@ -1,0 +1,15 @@
+{
+  "apps": [
+      {
+          "name": "davinci",
+          "script": "./server/server.js",
+          "exec_mode": "cluster",
+          "instances": "max",
+          "env": {
+              "NODE_PATH": "server"
+          },
+          "error_file": "./err.log",
+          "out_file": "./out.log"
+      }
+  ]
+}
