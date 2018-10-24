@@ -1,6 +1,6 @@
 FROM node:8
 
-RUN apk add -U tzdata
+RUN apt-get install -y tzdata
 RUN cp /usr/share/zoneinfo/Europe/Istanbul /etc/localtime
 
 RUN npm install pm2 -g
