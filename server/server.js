@@ -32,8 +32,9 @@ app.use(cors());
 // app.use(passport.initialize());
 
 // connect to mongodb
-mongoose.connect('mongodb://localhost/davinci', () => {
+mongoose.connect(process.env.MONGODB_URI, () => {
   console.log('Connection has been made');
+  mongoose.Promise = global.Promise;
 }).catch((err) => {
   console.error('App starting error:', err.stack);
   process.exit(1);
